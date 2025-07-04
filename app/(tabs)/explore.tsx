@@ -1,110 +1,191 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Alert, Button, StyleSheet, Text, View } from "react-native";
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import axios from "axios";
+import { Camera, CameraView, useCameraPermissions } from "expo-camera";
+import { useEffect, useState } from "react";
 
 export default function TabTwoScreen() {
+  const [permission, requestPermission] = useCameraPermissions();
+  const [scanned, setScanned] = useState(false);
+  const [data, setData] = useState([]);
+
+  const studentId = "1141ce3d-494d-4e6f-81fe-3ff4b05a43e4"; // Substitua pelo valor real ou torne dinâmico
+
+  const fetchData = async (sessionId: string) => {
+    try {
+      /*
+      const response = await fetch("http://localhost:5202/api/attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentId: "9541ce3d-494d-4e6f-81fe-3ff4b05a43e4",
+          sessionId: "a5aa4cc3-3280-4eae-aa4d-cd095c33f17c",
+        }),
+      });*/
+
+      const { data } = await axios.post(
+        "http://192.168.15.4:5202/api/attendance",
+        {
+          studentId: studentId,
+          sessionId: sessionId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (data) {
+        Alert.alert("Presença registrada com sucesso!");
+      } else {
+        const errorText = await data.text();
+        Alert.alert("Erro ao registrar presença", errorText);
+      }
+    } catch (error: any) {
+      Alert.alert("Erro de conexão", error.nessage);
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+
+      if (status !== "granted") {
+        alert(
+          "Desculpe, precisamos da permisão da câmera para fazer isso funcionar!"
+        );
+      }
+    })();
+  }, []);
+
+  const handleBarCodeScanned = ({ type, data }: Prop) => {
+    setScanned(true);
+
+    Alert.alert(
+      `Código ${type} Scaneado`,
+      `Dados: ${data}`,
+      [
+        {
+          text: "OK",
+          onPress: () => setScanned(false),
+        },
+      ],
+      { cancelable: false }
+    );
+
+    fetchData(data);
+  };
+
+  if (!permission?.granted) {
+    // Camera permissions are still loading or denied.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.permissionText}>
+          Permissão da câmera não concedida.
+        </Text>
+        <Button title="Solicitar Permissão" onPress={requestPermission} />
+      </View>
+    );
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <CameraView
+      style={styles.camera}
+      onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+    >
+      <View style={styles.layerContainer}>
+        <View style={styles.layerTop} />
+        <View style={styles.layerCenter}>
+          <View style={styles.layerLeft} />
+          <View style={styles.focused} />
+          <View style={styles.layerRight} />
+        </View>
+        <View style={styles.layerBottom} />
+      </View>
+    </CameraView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
   titleContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
+  },
+  stepContainer: {
+    gap: 8,
+    marginBottom: 8,
+  },
+  reactLogo: {
+    height: 178,
+    width: 290,
+    bottom: 0,
+    left: 0,
+    position: "absolute",
+  },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  permissionText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  camera: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  layerContainer: {
+    flex: 1,
+  },
+  layerTop: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  layerCenter: {
+    flexDirection: "row",
+  },
+  layerLeft: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  focused: {
+    width: 200,
+    height: 200,
+    borderWidth: 2,
+    borderColor: "#00FF00",
+  },
+  layerRight: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  layerBottom: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  },
+  resultContainer: {
+    padding: 20,
+    backgroundColor: "#fff",
+    alignItems: "center",
+  },
+  resultText: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
+  button: {
+    backgroundColor: "#00FF00",
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
