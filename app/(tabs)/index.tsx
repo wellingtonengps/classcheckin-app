@@ -11,7 +11,7 @@ import {
 export default function HomeScreen() {
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(true);
-  const studentId = "1141ce3d-494d-4e6f-81fe-3ff4b05a43e4"; // Substitua por um ID real
+  const studentId = "9541ce3d-494d-4e6f-81fe-3ff4b05a43e4"; // Substitua por um ID real
   const apiBaseUrl = "http://192.168.15.4:5202"; // Substitua pelo IP local da sua máquina
 
   useEffect(() => {
