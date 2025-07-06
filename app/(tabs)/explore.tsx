@@ -1,5 +1,6 @@
 import { Alert, Button, StyleSheet, Text, View } from "react-native";
 
+import { useUser } from "@/hooks/userProvider";
 import axios from "axios";
 import { Camera, CameraView, useCameraPermissions } from "expo-camera";
 import { useEffect, useState } from "react";
@@ -8,27 +9,14 @@ export default function TabTwoScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [data, setData] = useState([]);
-
-  const studentId = "1141ce3d-494d-4e6f-81fe-3ff4b05a43e4"; // Substitua pelo valor real ou torne dinâmico
+  const { user } = useUser();
 
   const fetchData = async (sessionId: string) => {
     try {
-      /*
-      const response = await fetch("http://localhost:5202/api/attendance", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          studentId: "9541ce3d-494d-4e6f-81fe-3ff4b05a43e4",
-          sessionId: "a5aa4cc3-3280-4eae-aa4d-cd095c33f17c",
-        }),
-      });*/
-
       const { data } = await axios.post(
         "http://192.168.15.4:5202/api/attendance",
         {
-          studentId: studentId,
+          studentId: user?.id,
           sessionId: sessionId,
         },
         {
@@ -81,7 +69,6 @@ export default function TabTwoScreen() {
   };
 
   if (!permission?.granted) {
-    // Camera permissions are still loading or denied.
     return (
       <View style={styles.container}>
         <Text style={styles.permissionText}>

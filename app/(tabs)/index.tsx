@@ -1,3 +1,4 @@
+import { useUser } from "@/hooks/userProvider";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import {
@@ -11,14 +12,18 @@ import {
 export default function HomeScreen() {
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user, isUserLoading } = useUser();
+
   const studentId = "9541ce3d-494d-4e6f-81fe-3ff4b05a43e4"; // Substitua por um ID real
-  const apiBaseUrl = "http://192.168.15.4:5202"; // Substitua pelo IP local da sua máquina
+  const apiBaseUrl = ""; // Substitua pelo IP local da sua máquina
 
   useEffect(() => {
+    if (isUserLoading || !user?.id) return;
+
     async function fetchAttendances() {
       try {
         const response = await axios.get(
-          `${apiBaseUrl}/api/attendance/student/${studentId}`
+          `http://192.168.15.4:5202/api/attendance/student/${user?.id}`
         );
         setAttendances(response.data);
       } catch (error) {
@@ -29,7 +34,7 @@ export default function HomeScreen() {
     }
 
     fetchAttendances();
-  }, []);
+  }, [user, isUserLoading]);
 
   if (loading) {
     return (

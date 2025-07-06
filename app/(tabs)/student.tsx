@@ -1,35 +1,12 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { UserType, useUser } from "@/hooks/userProvider";
+import { useState } from "react";
 import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
-
-type StudentType = {
-  name: string;
-  email: string;
-  registration: number;
-  id: string;
-};
 
 export default function Student() {
   const [name, setName] = useState("");
   const [registration, setRegistration] = useState("");
   const [email, setEmail] = useState("");
-  const [savedStudent, setSavedStudent] = useState<StudentType | null>(null);
-
-  useEffect(() => {
-    loadStudentFromStorage();
-  }, []);
-
-  const loadStudentFromStorage = async () => {
-    try {
-      const studentData = await AsyncStorage.getItem("student");
-      if (studentData) {
-        const parsed: StudentType = JSON.parse(studentData);
-        setSavedStudent(parsed);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar estudante do storage:", error);
-    }
-  };
+  const { user, setUser } = useUser();
 
   const handleSalvar = async () => {
     if (!name || !email || !registration) {
@@ -37,28 +14,22 @@ export default function Student() {
       return;
     }
 
-    const student = {
-      name,
-      email,
-      registration: Number(registration),
-    };
-
     try {
       const response = await fetch("http://192.168.15.4:5202/api/student", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(student),
+        body: JSON.stringify({
+          name,
+          email,
+          registration: Number(registration),
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Erro ao salvar: ${response.status}`);
-      }
+      const data: UserType = await response.json();
+      setUser(data);
 
-      const data: StudentType = await response.json();
-      await AsyncStorage.setItem("student", JSON.stringify(data));
-      setSavedStudent(data);
       Alert.alert("Sucesso", "Estudante salvo com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar estudante:", error);
@@ -66,14 +37,13 @@ export default function Student() {
     }
   };
 
-  // Se já tiver um estudante salvo, mostrar os dados
-  if (savedStudent) {
+  if (user) {
     return (
       <View style={styles.container}>
         <Text style={styles.label}>Estudante salvo:</Text>
-        <Text style={styles.info}>Nome: {savedStudent.name}</Text>
-        <Text style={styles.info}>Matrícula: {savedStudent.registration}</Text>
-        <Text style={styles.info}>Email: {savedStudent.email}</Text>
+        <Text style={styles.info}>Nome: {user.name}</Text>
+        <Text style={styles.info}>Matrícula: {user.registration}</Text>
+        <Text style={styles.info}>Email: {user.email}</Text>
       </View>
     );
   }
