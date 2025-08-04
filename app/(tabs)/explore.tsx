@@ -14,7 +14,7 @@ export default function TabTwoScreen() {
   const fetchData = async (sessionId: string) => {
     try {
       const { data } = await axios.post(
-        "http://192.168.15.4:5202/api/attendance",
+        "http://192.168.15.7:5202/api/attendance",
         {
           studentId: user?.id,
           sessionId: sessionId,
